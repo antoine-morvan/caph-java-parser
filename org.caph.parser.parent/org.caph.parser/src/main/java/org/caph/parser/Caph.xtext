@@ -1,0 +1,50 @@
+grammar org.caph.parser.Caph hidden(WS, ML_COMMENT, SL_COMMENT)
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+generate caph "http://www.caph.org/parser/Caph"
+
+Model:
+	greetings+=Greeting*;
+
+Greeting:
+	'Hello' name=ID '!';
+
+
+/* ****************************************************************
+   **		TERMINALS
+   **************************************************************** */
+
+/* terminal */ VAR: ID;
+/* terminal */ ATTR: ID;
+
+terminal INTCONST returns ecore::EInt: ('-')? DIGIT+;
+terminal FIXINTCONST: (RADIX)? DIGIT+;
+terminal FLOATCONST returns ecore::EFloat: ('-')? DIGIT+ ('.' DIGIT*)? (("e"|"E")("+"|"-")DIGIT+)?;
+terminal BOOLEANCONST returns ecore::EBoolean: ('true'|'false');
+
+terminal RADIX: 'Ox' | 'Ob';
+
+terminal ID: LETTER (LETTER | DIGIT | '_' | "'" )*;
+
+terminal LETTER: ('a'..'z');
+terminal CONID: UID;
+terminal TYPEVAR: '$' ID;
+/* terminal */ SIZEVAR: ID;
+terminal UID: ULETTER ( LETTER | DIGIT | '_' | "'" )*;
+
+terminal ULETTER: ('A'..'Z');
+//terminal BINARYOPERATOR:
+//	'+' | '-' | '*' | '/' | 'mod' | '+.' | '-.' | '*.' | '/.' | '<' | '>' | '<=' | '>=' | '=' |
+//'!=' | '&&' | '||' | 'land' | 'lor' | 'lxor' '<<' | '>>'
+//;
+//terminal UNARYOPERATOR: '-' | '!';
+terminal DIGIT: ('0'..'9');
+terminal STRING:
+			'"' ( '\\' . /* 'b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\' */ | !('\\'|'"') )* '"' |
+			"'" ( '\\' . /* 'b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\' */ | !('\\'|"'") )* "'"
+		;
+terminal ML_COMMENT : '/*' -> '*/';
+terminal SL_COMMENT : '//' !('\n'|'\r')* ('\r'? '\n')?;
+
+terminal WS         : (' '|'\t'|'\r'|'\n')+;
+
+terminal ANY_OTHER: .;

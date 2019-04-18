@@ -1,0 +1,14 @@
+
+
+.project
+.settings/
+.classpath
+target/
+.launch/
+
+
+# xtext / xtend generated files
+xtend-gen/
+xtext-gen/
+*._trace
+*.xtendbin
