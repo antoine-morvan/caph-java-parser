@@ -42,17 +42,18 @@ public class CaphParserHelper {
 		return parse(URI.createURI(sourceFile.toURI().toString()));
 	}
 
+	private static final Injector injector = new CaphStandaloneSetup().createInjectorAndDoEMFRegistration();
+	private static final ResourceSet rs = injector.getInstance(ResourceSet.class);
+	private static final IResourceValidator validator = injector.getInstance(IResourceValidator.class);
+
 	public static final CaphParseResult parse(final URI sourceFileUri) {
-		Injector injector = new CaphStandaloneSetup().createInjectorAndDoEMFRegistration();
-		ResourceSet rs = injector.getInstance(ResourceSet.class);
-		Resource resource = rs.getResource(sourceFileUri, true);
+		final Resource resource = rs.getResource(sourceFileUri, true);
 		try {
 			resource.load(null);
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			throw new CaphParserException("Could not load file.", e);
 		}
-		IResourceValidator validator = injector.getInstance(IResourceValidator.class);
-		List<Issue> issues = validator.validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
+		final List<Issue> issues = validator.validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
 		return new CaphParseResult(resource, issues);
 	}
 }
