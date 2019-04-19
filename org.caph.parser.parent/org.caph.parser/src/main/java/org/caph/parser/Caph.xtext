@@ -159,17 +159,7 @@ PragmaDeclaration: '#pragma' id=ID ('(' args+=ID (',' args+=ID)* ')')?;
    **		Expressions
    **************************************************************** */
 
-
-Expression: Addition; // | Multiplication | Primary;
-
-//terminal ADDLEVEL_BINOP: '+' | '-';
-//terminal MULLEVEL_BINOP: '*' | '/' | 'mod';
-//
-//Addition returns Expression:
-//  Multiplication ({Addition.left=current} op=ADDLEVEL_BINOP right=Multiplication)*;
-//
-//Multiplication returns Expression:
-//  Primary ({Multiplication.left=current} op=MULLEVEL_BINOP right=Primary)*;
+Expression: Addition;
 
 Addition returns Expression:
   Multiplication ({Addition.left=current} op=('+' | '-') right=Multiplication)?;
@@ -181,7 +171,6 @@ Primary returns Expression: {Expression} ScalarConstant
 	| '(' Expression ')'
 	| var=VAR ('[' indexes+=ArrayIndex ']')*
 	;
-
 
 ArrayInit:
 	ArrayExt1 | ArrayExt2 | ArrayExt3 | '[' ArrayComprehension ']'
@@ -285,11 +274,6 @@ terminal TYPEVAR: '$' ID;
 terminal UID: ULETTER ( LETTER | DIGIT | '_' | "'" )*;
 
 terminal ULETTER: ('A'..'Z');
-//terminal BINARYOPERATOR:
-//	'+' | '-' | '*' | '/' | 'mod' | '+.' | '-.' | '*.' | '/.' | '<' | '>' | '<=' | '>=' | '=' |
-//'!=' | '&&' | '||' | 'land' | 'lor' | 'lxor' '<<' | '>>'
-//;
-//terminal UNARYOPERATOR: '-' | '!';
 terminal DIGIT: ('0'..'9');
 terminal STRING:
 			'"' ( '\\' . /* 'b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\' */ | !('\\'|'"') )* '"'
