@@ -31,7 +31,13 @@ ValDeclaration: 'val';
    **		IO Decls
    **************************************************************** */
 
-IODeclaration: 'io';
+IODeclaration: 'stream' ID ':' ObjectType ('from' | 'to') Device
+//	| 'port' ID ':' Type ('from' Device)? 'init' SimpleNetExpression // XXX
+//	| 'port' ID ':' Type 'to' Device // XXX
+;
+
+
+Device: STRING;
 
 /* ****************************************************************
    **		ACTOR Decls
@@ -55,7 +61,36 @@ ActorBody: STRING; // TODO
    **		NET Decls
    **************************************************************** */
 
-NetDeclaration: 'net';
+NetDeclaration: 'net' ('rec')? NetBindings;
+
+NetBindings: bindings+=NetBinding ('and' bindings+=NetBinding)*;
+
+NetBinding: NetPattern '=' NetExpression
+//	| ID (NetPattern)+ '=' NetExpression
+;
+
+NetPattern: VAR
+	| '(' NetPattern (',' NetPattern)*')'
+;
+
+NetExpressions: exprs+=NetExpression (',' exprs+=NetExpression)*;
+
+NetExpression:
+	SimpleNetExpression+
+	//TODO
+;
+
+SimpleNetExpression: VAR
+//	| '(' NetExpression ')'
+//	| '(' SimpleNetExpression ':' ObjectType ')'
+	| ParamValue
+	// TODO
+;
+
+ParamValue: //VAR	|
+	ScalarConstant |
+	Array1Constant
+;
 
 /* ****************************************************************
    **		PRAGMA Decls
@@ -77,9 +112,7 @@ Type: TypeProduct | TypeProduct '->' Type;
 
 TypeProduct: NamedType ('*' NamedType)*;
 
-NamedType:
-	ArrayType (ID ('[' Size ']')?)?
-;
+NamedType: ArrayType (ID ('[' Size ']')?)?;
 
 ArrayType: SimpleType ('array'  '[' Size ']'  ('[' Size ']')? )?;
 
@@ -97,6 +130,21 @@ Sign: '_signed' | '_unsigned';
 
 Size: INTCONST | SIZEVAR;
 
+/* ****************************************************************
+   **		CONSTANTS
+   **************************************************************** */
+
+ScalarConstant:
+	INTCONST | BOOLEANCONST | FLOATCONST
+;
+
+Array1Constant:
+	'[' ScalarConstant (',' ScalarConstant)* ']'
+;
+
+Array2Constant:
+	'[' Array1Constant (',' Array1Constant)* ']'
+;
 
 /* ****************************************************************
    **		TERMINALS
