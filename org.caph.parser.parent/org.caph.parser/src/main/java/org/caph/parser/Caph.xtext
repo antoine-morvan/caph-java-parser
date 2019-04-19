@@ -1,12 +1,101 @@
-grammar org.caph.parser.Caph hidden(WS, ML_COMMENT, SL_COMMENT)
+grammar org.caph.parser.Caph hidden(WS, SL_COMMENT, INCLUDE)
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 generate caph "http://www.caph.org/parser/Caph"
 
 Model:
-	greetings+=Greeting*;
+	declarations+=Declaration*;
 
-Greeting:
-	'Hello' name=ID '!';
+Declaration: TypeDeclaration ';'
+	| ValDeclaration ';'
+	| IODeclaration ';'
+	| ActorDeclaration ';'
+	| NetDeclaration ';'
+	| PragmaDeclaration
+;
+
+
+
+/* ****************************************************************
+   **		TYPE Decls
+   **************************************************************** */
+
+TypeDeclaration: 'type';
+
+/* ****************************************************************
+   **		VAL Decls
+   **************************************************************** */
+
+ValDeclaration: 'val';
+
+/* ****************************************************************
+   **		IO Decls
+   **************************************************************** */
+
+IODeclaration: 'io';
+
+/* ****************************************************************
+   **		ACTOR Decls
+   **************************************************************** */
+
+ActorDeclaration: 'actor' ID ActorInterface ActorBody;
+
+ActorInterface: ('(' parameters=ActorParameters ')')? 'in' '(' ins=ActorPorts ')' 'out' '(' outs=ActorPorts ')';
+
+ActorParameters: ActorParameter (',' ActorParameters)?;
+ActorParameter: ID ':' ObjectType;
+
+ActorPorts: ActorPort (',' ActorPorts)?;
+ActorPort: ID ':' ObjectType;
+
+ActorBody: STRING; // TODO
+
+
+
+/* ****************************************************************
+   **		NET Decls
+   **************************************************************** */
+
+NetDeclaration: 'net';
+
+/* ****************************************************************
+   **		PRAGMA Decls
+   **************************************************************** */
+
+PragmaDeclaration: '#pragma' id=ID ('(' args+=ID (',' args+=ID)* ')')?;
+
+/* ****************************************************************
+   **		Expressions
+   **************************************************************** */
+
+
+/* ****************************************************************
+   **		Types
+   **************************************************************** */
+
+ObjectType: Type;
+Type: TypeProduct | TypeProduct '->' Type;
+
+TypeProduct: NamedType ('*' NamedType)*;
+
+NamedType:
+	ArrayType (ID ('[' Size ']')?)?
+;
+
+ArrayType: SimpleType ('array'  '[' Size ']'  ('[' Size ']')? )?;
+
+SimpleType:
+	'signed' '<' Size '>'
+	| 'unsigned' '<' Size '>'
+	| 'int' ('<' ( Sign ',')? Size '>')?
+	| TYPEVAR
+//	| '(' Type ')' // XXX
+
+	// TODO other
+;
+
+Sign: '_signed' | '_unsigned';
+
+Size: INTCONST | SIZEVAR;
 
 
 /* ****************************************************************
@@ -42,8 +131,9 @@ terminal STRING:
 			'"' ( '\\' . /* 'b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\' */ | !('\\'|'"') )* '"' |
 			"'" ( '\\' . /* 'b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\' */ | !('\\'|"'") )* "'"
 		;
-terminal ML_COMMENT : '/*' -> '*/';
-terminal SL_COMMENT : '//' !('\n'|'\r')* ('\r'? '\n')?;
+//terminal ML_COMMENT : '/*' -> '*/';
+terminal SL_COMMENT : '--' !('\n'|'\r')* ('\r'? '\n')? ;
+terminal INCLUDE: '#include' !('\n'|'\r')* ('\r'? '\n')? ;
 
 terminal WS         : (' '|'\t'|'\r'|'\n')+;
 
