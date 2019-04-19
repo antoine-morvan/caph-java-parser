@@ -102,9 +102,25 @@ PragmaDeclaration: '#pragma' id=ID ('(' args+=ID (',' args+=ID)* ')')?;
    **		Expressions
    **************************************************************** */
 
+/* ****************************************************************
+   **		CONSTANTS
+   **************************************************************** */
+
+ScalarConstant:
+	INTCONST | BOOLEANCONST | FLOATCONST
+;
+
+Array1Constant:
+	'[' ScalarConstant (',' ScalarConstant)* ']'
+;
+
+Array2Constant:
+	'[' Array1Constant (',' Array1Constant)* ']'
+;
+
 
 /* ****************************************************************
-   **		Types
+   **		Type Expressions
    **************************************************************** */
 
 ObjectType: Type;
@@ -122,29 +138,24 @@ SimpleType:
 	| 'int' ('<' ( Sign ',')? Size '>')?
 	| TYPEVAR
 //	| '(' Type ')' // XXX
-
-	// TODO other
 ;
 
 Sign: '_signed' | '_unsigned';
 
 Size: INTCONST | SIZEVAR;
 
-/* ****************************************************************
-   **		CONSTANTS
-   **************************************************************** */
+ArraySize: INTCONST;
 
-ScalarConstant:
-	INTCONST | BOOLEANCONST | FLOATCONST
+VarType: ObjectType
+	| '{' Ctors '}'
+	| '{' IntRange '}'
 ;
 
-Array1Constant:
-	'[' ScalarConstant (',' ScalarConstant)* ']'
+Ctors:
+	CONID (',' Ctors)?
 ;
 
-Array2Constant:
-	'[' Array1Constant (',' Array1Constant)* ']'
-;
+IntRange: INTCONST ',..,' INTCONST;
 
 /* ****************************************************************
    **		TERMINALS
