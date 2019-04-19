@@ -53,9 +53,66 @@ ActorParameter: ID ':' ObjectType;
 ActorPorts: ActorPort (',' ActorPorts)?;
 ActorPort: ID ':' ObjectType;
 
-ActorBody: STRING; // TODO
+ActorBody: (ActorVar)* 'rules' ActorRules;
 
 
+ActorVar:'var' ID ':' VarType ('=' VarInit)?;
+
+VarInit: ArrayInit
+	| Expression
+	| CONID
+;
+
+ActorRules: RuleSchema UnqualifiedRule+
+	| QualifiedRuled+
+;
+
+RuleSchema:
+	Qualifiers '->' Qualifiers
+;
+
+QualifiedRuled:
+	ID //TODO
+;
+
+UnqualifiedRule: '|' UnqualifiedRuleLHS (RuleGuard)? '->' UnqualifiedRuleRHS;
+
+Qualifiers: Qualifier | '(' Qualifier (','Qualifier )+')';
+
+Qualifier:
+	ID // TODO other
+;
+
+RuleGuard:
+	ID // TODO
+;
+
+UnqualifiedRuleLHS: RulePattern | '(' RulePattern (',' RulePattern)+ ')';
+
+
+RulePattern: SimpleRulePattern // TODO
+	| CONID //SimpleRulePattern?
+//	| CONID '(' SimpleRulePattern (',' SimpleRulePattern)* ')'
+	| '\'>'
+	| '\'<'
+	| '\''SimpleRulePattern
+;
+
+SimpleRulePattern: VAR
+	| ScalarConstant
+	| '_'
+;
+
+UnqualifiedRuleRHS:  RuleExpression | '(' RuleExpression (',' RuleExpression)+ ')';
+
+RuleExpression: Expression
+	| CONID Expression?
+	| CONID '(' Expression (',' Expression)* ')'
+	| "'>"
+	| "'<"
+	| "'"Expression
+	| '_'
+;
 
 /* ****************************************************************
    **		NET Decls
@@ -101,6 +158,34 @@ PragmaDeclaration: '#pragma' id=ID ('(' args+=ID (',' args+=ID)* ')')?;
 /* ****************************************************************
    **		Expressions
    **************************************************************** */
+
+Expression:ScalarConstant
+	| VAR
+;
+
+ArrayInit:
+	ArrayExt1 | ArrayExt2 | ArrayExt3 | '[' ArrayComprehension ']'
+;
+
+ArrayExt1:
+	'[' Expression (',' Expression)* ']'
+;
+
+ArrayExt2:
+	'[' ArrayExt1 (',' ArrayExt1)* ']'
+;
+
+ArrayExt3:
+	'[' ArrayExt2 (',' ArrayExt2)* ']'
+;
+
+ArrayComprehension:
+	'[' Expression | '|' IndexRange (',' IndexRange)* ']'
+;
+
+IndexRange: ID '=' ArrayIndex 'to' ArrayIndex;
+
+ArrayIndex: Expression;
 
 /* ****************************************************************
    **		CONSTANTS
