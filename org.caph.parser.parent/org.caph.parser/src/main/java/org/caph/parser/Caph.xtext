@@ -43,7 +43,7 @@ Device: STRING;
    **		ACTOR Decls
    **************************************************************** */
 
-ActorDeclaration: 'actor' ID ActorInterface ActorBody;
+ActorDeclaration: 'actor' ID ActorInterface body=ActorBody;
 
 ActorInterface: ('(' parameters=ActorParameters ')')? 'in' '(' ins=ActorPorts ')' 'out' '(' outs=ActorPorts ')';
 
@@ -53,7 +53,7 @@ ActorParameter: ID ':' ObjectType;
 ActorPorts: ActorPort (',' ActorPorts)?;
 ActorPort: ID ':' ObjectType;
 
-ActorBody: (ActorVar)* 'rules' ActorRules;
+ActorBody: (vars+=ActorVar)* 'rules' rules=ActorRules;
 
 
 ActorVar:'var' ID ':' VarType ('=' VarInit)?;
@@ -63,7 +63,7 @@ VarInit: ArrayInit
 	| CONID
 ;
 
-ActorRules: RuleSchema UnqualifiedRule+
+ActorRules: RuleSchema rules+=UnqualifiedRule+
 	| QualifiedRuled+
 ;
 
@@ -103,11 +103,11 @@ SimpleRulePattern: VAR
 	| '_'
 ;
 
-UnqualifiedRuleRHS:  RuleExpression | '(' RuleExpression (',' RuleExpression)+ ')';
+UnqualifiedRuleRHS:  exprs+=RuleExpression | '(' exprs+=RuleExpression (',' exprs+=RuleExpression)+ ')';
 
 RuleExpression: Expression
 	| CONID Expression?
-	| CONID '(' Expression (',' Expression)* ')'
+	| CONID '(' exprs+=Expression (',' exprs+=Expression)* ')'
 	| "'>"
 	| "'<"
 	| "'"Expression
@@ -159,31 +159,51 @@ PragmaDeclaration: '#pragma' id=ID ('(' args+=ID (',' args+=ID)* ')')?;
    **		Expressions
    **************************************************************** */
 
-Expression:ScalarConstant
-	| VAR
-;
+
+Expression: Addition; // | Multiplication | Primary;
+
+//terminal ADDLEVEL_BINOP: '+' | '-';
+//terminal MULLEVEL_BINOP: '*' | '/' | 'mod';
+//
+//Addition returns Expression:
+//  Multiplication ({Addition.left=current} op=ADDLEVEL_BINOP right=Multiplication)*;
+//
+//Multiplication returns Expression:
+//  Primary ({Multiplication.left=current} op=MULLEVEL_BINOP right=Primary)*;
+
+Addition returns Expression:
+  Multiplication ({Addition.left=current} op=('+' | '-') right=Multiplication)?;
+
+Multiplication returns Expression:
+  Primary ({Multiplication.left=current} op=('*' | '/' | 'mod') right=Primary)?;
+
+Primary returns Expression: {Expression} ScalarConstant
+	| '(' Expression ')'
+	| var=VAR ('[' indexes+=ArrayIndex ']')*
+	;
+
 
 ArrayInit:
 	ArrayExt1 | ArrayExt2 | ArrayExt3 | '[' ArrayComprehension ']'
 ;
 
 ArrayExt1:
-	'[' Expression (',' Expression)* ']'
+	'[' indexes+=Expression (',' indexes+=Expression)* ']'
 ;
 
 ArrayExt2:
-	'[' ArrayExt1 (',' ArrayExt1)* ']'
+	'[' indexes+=ArrayExt1 (',' indexes+=ArrayExt1)* ']'
 ;
 
 ArrayExt3:
-	'[' ArrayExt2 (',' ArrayExt2)* ']'
+	'[' indexes+=ArrayExt2 (',' indexes+=ArrayExt2)* ']'
 ;
 
 ArrayComprehension:
-	'[' Expression | '|' IndexRange (',' IndexRange)* ']'
+	'[' Expression | '|' ranges+=IndexRange (',' ranges+=IndexRange)* ']'
 ;
 
-IndexRange: ID '=' ArrayIndex 'to' ArrayIndex;
+IndexRange: ID '=' from=ArrayIndex 'to' to=ArrayIndex;
 
 ArrayIndex: Expression;
 
