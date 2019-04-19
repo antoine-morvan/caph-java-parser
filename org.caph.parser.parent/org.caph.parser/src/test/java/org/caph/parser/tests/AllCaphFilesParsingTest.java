@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.caph.parser.CaphParserHelper;
 import org.caph.parser.CaphParserHelper.CaphParseResult;
+import org.eclipse.xtext.diagnostics.Severity;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,6 +59,10 @@ public class AllCaphFilesParsingTest {
 	@Test
 	public void testParse() throws IOException {
 		CaphParseResult parse = CaphParserHelper.parse(sourceFile);
+		if (parse.error) {
+			System.out.println(sourceFile.toString());
+			parse.issues.stream().filter(i -> i.getSeverity() == Severity.ERROR).forEach(i -> System.out.println(i));
+		}
 		Assert.assertFalse(parse.error);
 	}
 }
