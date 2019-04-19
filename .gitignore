@@ -3,6 +3,7 @@
 .settings/
 target/
 .launch/
+generated/
 
 
 # xtext / xtend generated files
